@@ -1,0 +1,4 @@
+ProfileType,Alloy,Weight_per_meter,Total_length,SurfaceTreatment,MachiningComplexity,FinalPrice
+TypeA,6060,0.5,100,Anodized,Medium,1200
+TypeB,6063,0.8,150,PowderCoated,High,1800
+TypeC,6082,1.2,90,Anodized,Low,950
