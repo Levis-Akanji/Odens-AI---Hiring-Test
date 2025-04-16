@@ -1,29 +1,26 @@
 // backend/server.js
+require('dotenv').config(); // ✅ Only call this ONCE, at the VERY TOP!
+
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const multer = require('multer');
 const mongoose = require('mongoose');
 const path = require('path');
-require('dotenv').config()
-
-// Load environment variables
-dotenv.config();
+const quoteRoutes = require('./routes/quoteRoutes');
+const emailRoutes = require('./routes/emailRoutes');
+const customerRoutes = require('./routes/customerRoutes');
 
 const app = express();
 
-// ✅ Middleware must come before routes
+// Middleware
 app.use(cors());
-app.use(express.json()); // This fixes body parsing
+app.use(express.json());
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Import routes
-const quoteRoutes = require('./routes/quoteRoutes');
-const customerRoutes = require('./routes/customerRoutes');
-
 // Register routes
+app.use('/api/email', emailRoutes);
 app.use('/api/quotes', quoteRoutes);
 app.use('/api/customers', customerRoutes);
 
@@ -50,8 +47,11 @@ mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-  .then(() => console.log("MongoDB Connected"))
-  .catch(err => console.log(err));
+.then(() => console.log("MongoDB Connected"))
+.catch(err => {
+  console.error('MongoDB connection error:', err);
+  process.exit(1);
+});
 
 // Start the server
 const PORT = process.env.PORT || 5050;

@@ -1,18 +1,20 @@
 const mongoose = require('mongoose');
 
 const quoteSchema = new mongoose.Schema({
-  customerId: mongoose.Schema.Types.ObjectId,
-  customerName: String,
-  contact: String,
-  email: String,
+  customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
+  customerName: { type: String, required: false },
+  contact: { type: String, required: false },
   title: String,
   reference: String,
   validUntil: Date,
   specifications: String,
   communication: String,
-  files: [String],
-  predictedPrice: Number,
-  generatedQuoteText: String
+  productData: Object,
+  predictedPrice: { type: Number, required: false },
+  generatedQuoteText: { type: String, required: false },
+  files: [String]
+}, {
+  timestamps: true // adds createdAt and updatedAt automatically
 });
 
 module.exports = mongoose.model('Quote', quoteSchema);

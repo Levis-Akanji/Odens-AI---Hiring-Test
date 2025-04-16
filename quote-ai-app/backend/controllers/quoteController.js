@@ -3,7 +3,7 @@ const Customer = require('../models/Customer');
 const predictPrice = require('../ai/predictPrice');
 const generateQuoteText = require('../ai/generateQuoteText');
 
-async function createQuote(req, res) {
+exports.createQuote = async (req, res) => {
   try {
     const {
       customerId,
@@ -16,53 +16,62 @@ async function createQuote(req, res) {
       files
     } = req.body;
 
-    // ✅ Fetch customer info
-    const customer = await Customer.findById(customerId);
-    if (!customer) {
-      return res.status(404).json({ error: 'Customer not found' });
+    console.log('📥 Incoming quote request:', req.body);
+
+    let customerName = '';
+    let contact = '';
+    let email = ''; // ✅ get from customer
+
+    if (customerId) {
+      const customer = await Customer.findById(customerId);
+
+      if (!customer) {
+        console.warn('⚠️ Customer not found for ID:', customerId);
+      } else {
+        console.log('✅ Found customer:', customer);
+        customerName = customer.name || '';
+        contact = customer.contact || '';
+        email = customer.email || ''; // ✅ capture email
+      }
     }
 
-    // ✅ Predict price using AI
     const predictedPrice = await predictPrice(productData);
+    console.log('💰 Predicted Price:', predictedPrice);
 
-    // ✅ Generate quote text using GPT
     const generatedQuoteText = await generateQuoteText({
-      customerName: customer.name,
-      contact: customer.contact,
       title,
-      reference,
-      validUntil,
+      customerName,
       specifications,
       communication,
       predictedPrice
     });
+    console.log('📄 Generated Quote Text:', generatedQuoteText);
 
-    // ✅ Create and save the quote
-    const quote = new Quote({
+    const parsedValidUntil = validUntil ? new Date(validUntil) : null;
+
+    const newQuote = new Quote({
       customerId,
-      customerName: customer.name,
-      contact: customer.contact,
-      email: customer.email,
+      customerName,
+      contact,
+      email, // ✅ save to DB
       title,
       reference,
-      validUntil,
+      validUntil: parsedValidUntil,
       specifications,
       communication,
+      productData,
       predictedPrice,
       generatedQuoteText,
       files
     });
 
-    await quote.save();
+    const savedQuote = await newQuote.save();
+    console.log('✅ Quote saved:', savedQuote);
 
-    res.status(201).json(quote);
-
-  } catch (err) {
-    console.error('❌ Error creating quote:', err);
-    res.status(500).json({ error: 'Failed to create quote' });
+    res.json(savedQuote);
+  } catch (error) {
+    console.error('❌ Error creating quote:', error);
+    res.status(500).json({ error: 'Could not create quote' });
   }
-}
-
-module.exports = {
-  createQuote
+  
 };
